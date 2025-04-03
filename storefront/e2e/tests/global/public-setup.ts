@@ -1,7 +1,6 @@
-import { test as setup } from '@playwright/test'
+import { test as setup } from "@playwright/test"
+import { seedData } from "../../data/seed"
 
-import { seedData } from '../../data/seed'
-
-setup('Seed data', async () => {
+setup("Seed data", async () => {
   await seedData()
 })
