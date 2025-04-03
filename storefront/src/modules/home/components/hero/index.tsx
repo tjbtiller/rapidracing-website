@@ -10,21 +10,21 @@ const Hero = () => {
             level="h1"
             className="text-3xl leading-10 text-ui-fg-base font-normal"
           >
-            Well done! You have successfully deployed your Medusa 2.0 store on Railway!
+            Welcone to Rapid Racing!
           </Heading>
           <Heading
             level="h2"
             className="text-3xl leading-10 text-ui-fg-subtle font-normal"
           >
-            Need help customizing your store?
+            Need help with your ECU?
           </Heading>
         </span>
         <a
-          href="https://funkyton.com/medusajs-2-0-is-finally-here/"
+          href="https://wiki.rapidracing.us"
           target="_blank"
         >
           <h1 style={{ textDecoration: "underline" }}>
-            Visit the tutorial
+            Visit the wiki
           </h1>
         </a>
       </div>
