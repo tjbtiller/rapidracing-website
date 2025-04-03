@@ -1,7 +1,7 @@
-import { clx } from "@medusajs/ui"
+import React from 'react'
 
-import { getProductPrice } from "@lib/util/get-product-price"
-import { HttpTypes } from "@medusajs/types"
+import { getProductPrice } from '@lib/util/get-product-price'
+import { HttpTypes } from '@medusajs/types'
 
 export default function ProductPrice({
   product,
@@ -18,17 +18,13 @@ export default function ProductPrice({
   const selectedPrice = variant ? variantPrice : cheapestPrice
 
   if (!selectedPrice) {
-    return <div className="block w-32 h-9 bg-gray-100 animate-pulse" />
+    return <div className="block h-9 w-32 animate-pulse bg-gray-100" />
   }
 
   return (
-    <div className="flex flex-col text-ui-fg-base">
-      <span
-        className={clx("text-xl-semi", {
-          "text-ui-fg-interactive": selectedPrice.price_type === "sale",
-        })}
-      >
-        {!variant && "From "}
+    <div className="flex items-center gap-x-2">
+      <span className="text-2xl text-basic-primary">
+        {!variant && 'From '}
         <span
           data-testid="product-price"
           data-value={selectedPrice.calculated_price_number}
@@ -36,21 +32,17 @@ export default function ProductPrice({
           {selectedPrice.calculated_price}
         </span>
       </span>
-      {selectedPrice.price_type === "sale" && (
+      {selectedPrice.price_type === 'sale' && (
         <>
           <p>
-            <span className="text-ui-fg-subtle">Original: </span>
             <span
-              className="line-through"
+              className="text-md text-secondary line-through"
               data-testid="original-product-price"
               data-value={selectedPrice.original_price_number}
             >
               {selectedPrice.original_price}
             </span>
           </p>
-          <span className="text-ui-fg-interactive">
-            -{selectedPrice.percentage_diff}%
-          </span>
         </>
       )}
     </div>

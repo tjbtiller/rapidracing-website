@@ -1,8 +1,24 @@
 {
-  "arrowParens": "always",
+  "trailingComma": "es5",
   "semi": false,
-  "endOfLine": "auto",
-  "singleQuote": false,
   "tabWidth": 2,
-  "trailingComma": "es5"
+  "singleQuote": true,
+  "endOfLine": "auto",
+  "plugins": [
+    "@ianvs/prettier-plugin-sort-imports",
+    "prettier-plugin-tailwindcss"
+  ],
+  "importOrder": [
+    "^react$",
+    "^next$",
+    "^next/(.*)$",
+    "",
+    "<THIRD_PARTY_MODULES>",
+    "",
+    "^@/(.*)$",
+    "",
+    "^[./]"
+  ],
+  "importOrderParserPlugins": ["typescript", "jsx", "decorators-legacy"],
+  "importOrderTypeScriptVersion": "5.0.0"
 }

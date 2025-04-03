@@ -1,10 +1,10 @@
-import React from "react"
+import React from 'react'
 
-import { IconProps } from "types/icon"
+import { IconProps } from 'types/icon'
 
-const X: React.FC<IconProps> = ({
-  size = "20",
-  color = "currentColor",
+export const XIcon: React.FC<IconProps> = ({
+  size = '20',
+  color = 'currentColor',
   ...attributes
 }) => {
   return (
@@ -33,5 +33,3 @@ const X: React.FC<IconProps> = ({
     </svg>
   )
 }
-
-export default X
