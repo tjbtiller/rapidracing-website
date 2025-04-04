@@ -18,6 +18,8 @@ export const metadata: Metadata = {
 
 export default async function TermsAndConditionsPage() {
   try {
+    console.log('📦 Fetching Terms & Conditions content...')
+    
     const contentResponse = await getContentPage(
       'terms-and-condition',
       'terms-and-conditions'
@@ -25,15 +27,22 @@ export default async function TermsAndConditionsPage() {
 
     const pageContent = contentResponse?.data?.PageContent
 
-    if (!pageContent) return notFound()
+    if (!pageContent) {
+      console.error('❌ PageContent not found from Strapi.')
+      return notFound()
+    }
 
     const mdxSource = await serializeMdx(pageContent)
 
+    const headings = mdxSource?.frontmatter?.headings
+
     const bookmarks =
-      mdxSource?.frontmatter?.headings?.map((heading: any) => ({
-        id: heading.id,
-        label: heading.title,
-      })) || []
+      Array.isArray(headings) && headings.length > 0
+        ? headings.map((heading: any) => ({
+            id: heading?.id || '',
+            label: heading?.title || '',
+          }))
+        : []
 
     return (
       <Container className="min-h-screen max-w-full bg-secondary !p-0">
@@ -44,7 +53,11 @@ export default async function TermsAndConditionsPage() {
           </Heading>
           <Box className="mt-6 grid grid-cols-12 medium:mt-12">
             <Box className="col-span-12 mb-10 medium:col-span-3 medium:mb-0">
-              <SidebarBookmarks data={bookmarks} />
+              {bookmarks.length > 0 ? (
+                <SidebarBookmarks data={bookmarks} />
+              ) : (
+                <p className="text-sm text-secondary">No bookmarks available.</p>
+              )}
             </Box>
             <Box className="col-span-12 space-y-10 medium:col-span-8 medium:col-start-5">
               <MDXRemote source={mdxSource} />
@@ -53,7 +66,8 @@ export default async function TermsAndConditionsPage() {
         </Container>
       </Container>
     )
-  } catch (error) {
+  } catch (error: any) {
+    console.error('❌ Error loading Terms & Conditions page:', error?.message || error)
     return notFound()
   }
 }

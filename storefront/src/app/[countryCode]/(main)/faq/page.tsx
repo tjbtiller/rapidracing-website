@@ -19,16 +19,16 @@ export default async function FAQPage() {
     console.log('📦 Fetching FAQ data...')
 
     const response = await getFAQ()
-    const FAQSection = response?.data?.FAQSection || []
+    const FAQSection = response?.data?.FAQSection
 
-    if (!FAQSection.length) {
-      console.warn('⚠️ No FAQ sections available.')
+    if (!Array.isArray(FAQSection) || FAQSection.length === 0) {
+      console.warn('⚠️ No FAQ sections returned from CMS.')
       return notFound()
     }
 
-    const bookmarks = FAQSection.map((section) => ({
-      id: section.Bookmark,
-      label: section.Title,
+    const bookmarks = FAQSection.map((section, index) => ({
+      id: section?.Bookmark ?? `faq-${index}`,
+      label: section?.Title ?? `Untitled Section ${index + 1}`,
     }))
 
     console.log(`✅ Loaded ${FAQSection.length} FAQ sections.`)
@@ -46,16 +46,22 @@ export default async function FAQPage() {
             </Box>
 
             <Box className="col-span-12 space-y-10 medium:col-span-8 medium:col-start-5">
-              {FAQSection.map((section, id) => (
-                <FAQAccordion key={id} data={section} />
-              ))}
+              {FAQSection.map((section, id) =>
+                section ? (
+                  <FAQAccordion key={id} data={section} />
+                ) : (
+                  <p key={id} className="text-red-600">
+                    ⚠️ Invalid FAQ section at index {id}
+                  </p>
+                )
+              )}
             </Box>
           </Box>
         </Container>
       </Container>
     )
   } catch (err: any) {
-    console.error('❌ Error loading FAQ page:', err.message || err)
+    console.error('❌ Error loading FAQ page:', err?.message || err)
     return notFound()
   }
 }
