@@ -10,7 +10,7 @@ import { ExploreBlog } from '@modules/home/components/explore-blog'
 export const metadata: Metadata = {
   title: 'About Us',
   description:
-    'At Solace, we deliver innovative products designed to meet your needs with quality and care.',
+    'At Rapid Racing, we deliver innovative products designed to meet your needs with quality and care.',
 }
 
 export default async function AboutUsPage() {

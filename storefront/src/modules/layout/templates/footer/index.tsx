@@ -147,7 +147,7 @@ export default async function Footer({ countryCode }: { countryCode: string }) {
         <Divider alignment="horizontal" variant="secondary" />
         <Box className="flex flex-wrap gap-6 gap-y-1">
           <Text size="md" className="shrink-0 text-secondary">
-            © {new Date().getFullYear()} Solace. All rights reserved.
+            © {new Date().getFullYear()} Rapid Racing. All rights reserved.
           </Text>
           {footerNavigation.other.map((link, id) => (
             <NavigationItem

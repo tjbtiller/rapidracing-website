@@ -82,32 +82,54 @@ const Collections = ({
   medusaCollections: StoreCollection[]
 }) => {
   const validCollections = useMemo(() => {
-    if (!cmsCollections.data.length || !medusaCollections.length) return null
-    const collections = cmsCollections.data.filter((cmsCollection) =>
-      medusaCollections.some(
-        (medusaCollection) => medusaCollection.handle === cmsCollection.Handle
+    try {
+      if (!cmsCollections?.data?.length || !medusaCollections?.length) {
+        console.warn('⚠️ No collections available from CMS or Medusa.')
+        return null
+      }
+
+      const collections = cmsCollections.data.filter((cmsCollection) =>
+        medusaCollections.some(
+          (medusaCollection) => medusaCollection.handle === cmsCollection.Handle
+        )
       )
-    )
-    if (!collections || collections.length < 3) return null
-    return collections.sort((a, b) => b.id - a.id)
+
+      if (!collections || collections.length < 3) {
+        console.warn('⚠️ Not enough valid collections to display.')
+        return null
+      }
+
+      return collections.sort((a, b) => b.id - a.id)
+    } catch (error) {
+      console.error('❌ Error processing valid collections:', error.message, error.stack)
+      return null
+    }
   }, [cmsCollections, medusaCollections])
 
   const newestCollections = useMemo(() => {
-    if (!validCollections) return null
-    return validCollections.slice(0, 3)
+    try {
+      if (!validCollections) return null
+      return validCollections.slice(0, 3)
+    } catch (error) {
+      console.error('❌ Error processing newest collections:', error.message, error.stack)
+      return null
+    }
   }, [validCollections])
 
-  if (!newestCollections) return null
+  if (!newestCollections) {
+    console.warn('⚠️ No newest collections to display.')
+    return null
+  }
 
   return (
     <Container className="grid max-h-[660px] grid-rows-3 gap-2 small:max-h-[440px] small:grid-cols-2 small:grid-rows-2 large:max-h-[660px]">
-      {newestCollections.slice(0, 3).map((element, id) => (
+      {newestCollections.map((element, id) => (
         <CollectionTile
           key={id}
           title={element.Title}
           handle={element.Handle}
-          imgSrc={element.Image.url}
-          description={element.Description}
+          imgSrc={element.Image?.url || '/placeholder.jpg'} // Fallback to a placeholder image
+          description={element.Description || 'No description available.'} // Fallback description
           id={id}
         />
       ))}

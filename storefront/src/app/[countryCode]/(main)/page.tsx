@@ -18,9 +18,9 @@ import { ProductCarousel } from '@modules/products/components/product-carousel'
 import SkeletonProductsCarousel from '@modules/skeletons/templates/skeleton-products-carousel'
 
 export const metadata: Metadata = {
-  title: 'Solace Medusa Starter Template',
+  title: 'Rapid Racing',
   description:
-    'A performant frontend ecommerce starter template with Next.js 14 and Medusa 2.0.',
+    'A high end standalone Engine Control Unit (ECU) manufacturer for racing applications based in the USA.',
 }
 
 export default async function Home(props: {
