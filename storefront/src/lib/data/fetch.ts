@@ -182,10 +182,22 @@ export const getBlogPostBySlug = async (
 }
 
 export const getAllBlogSlugs = async (): Promise<string[]> => {
-  const res = await fetchStrapiClient(`/api/blogs?populate=*`, {
-    next: { tags: ['blog-slugs'] },
-  })
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/blogs?fields[0]=slug`, {
+      headers: {
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_STRAPI_TOKEN}`,
+      },
+    })
 
-  const data = await res.json()
-  return data.data.map((post: BlogPost) => post.Slug)
+    if (!res.ok) {
+      console.warn("⚠️ Failed to fetch blog slugs:", res.status, await res.text())
+      return []
+    }
+
+    const data = await res.json()
+    return data.data?.map((post: any) => post.attributes.slug) || []
+  } catch (err) {
+    console.error("❌ Error in getAllBlogSlugs:", err)
+    return []
+  }
 }
