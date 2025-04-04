@@ -1,6 +1,6 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env node
 
-import { execaCommandSync } from 'execa'
+const { execaCommandSync } = require('execa')
 
 execaCommandSync('pnpm run wait', { stdio: 'inherit' })
 execaCommandSync('pnpm run build', { stdio: 'inherit' })

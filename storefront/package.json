@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "wait": "tsx ./bin/await-backend.ts",
-    "launcher": "tsx ./bin/launch-storefront.ts",
+    "launcher": "node ./bin/launch-storefront.js",
     "dev": "npm run launcher dev",
     "build": "npm run launcher build",
     "start": "npm run launcher start",
