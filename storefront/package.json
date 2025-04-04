@@ -6,7 +6,6 @@
     "solace-medusa-starter"
   ],
   "scripts": {
-    "wait": "tsx ./bin/await-backend.ts",
     "launcher": "node ./bin/launch-storefront.js",
     "dev": "npm run launcher dev",
     "build": "npm run launcher build",
@@ -93,10 +92,7 @@
     "autoprefixer": "10.4.2",
     "babel-loader": "8.2.3",
     "eslint": "8.57.1",
-    "eslint-config-next": "15.1.5",
-    "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-unused-imports": "3.2.0",
-    "execa": "^9.5.2",
+    "eslint-config-next":     "execa": "^9.5.2",
     "postcss": "8.4.8",
     "prettier": "3.3.3",
     "prettier-plugin-tailwindcss": "0.6.6",
@@ -104,5 +100,8 @@
     "tsx": "^4.19.3",
     "typescript": "5.3.2",
     "wait-on": "^8.0.3"
+    "prettier-plugin-tailwindcss": "0.6.6",
+    "tailwindcss": "3.4.17",
+    "typescript": "5.3.2"
   }
 }
