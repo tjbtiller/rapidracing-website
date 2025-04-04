@@ -62,11 +62,14 @@ export const getProductsList = async function ({
   const limit = queryParams?.limit || 12
   const offset = Math.max(0, (pageParam - 1) * limit)
 
-  const region = await getRegion(countryCode)
-  console.log('📦 Region from getRegion():', region)
+  let region
 
-  if (!region) {
-    console.error('❌ No region found for countryCode:', countryCode)
+  try {
+    region = await getRegion(countryCode)
+    if (!region) throw new Error(`No region found for country code: ${countryCode}`)
+    console.log('📦 Region from getRegion():', region)
+  } catch (error: any) {
+    console.error('❌ Error resolving region:', error?.message || error)
     return {
       response: { products: [], count: 0 },
       nextPage: null,
@@ -88,7 +91,7 @@ export const getProductsList = async function ({
       { next: { tags: ['products'] } }
     )
 
-    console.log(`✅ Retrieved ${products.length} products`)
+    console.log(`✅ Medusa returned ${products.length} products`)
 
     const filteredProducts = products.filter((product) => {
       if (product.variants.length === 1) {
@@ -100,12 +103,14 @@ export const getProductsList = async function ({
     const filteredCount = filteredProducts.length
     const nextPage = filteredCount > offset + limit ? pageParam + 1 : null
 
+    console.log(`✅ Filtered to ${filteredCount} available products`)
+
     return {
       response: {
         products: filteredProducts,
         count: filteredCount,
       },
-      nextPage: nextPage,
+      nextPage,
       queryParams,
     }
   } catch (err: any) {
