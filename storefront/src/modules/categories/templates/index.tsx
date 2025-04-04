@@ -25,6 +25,17 @@ function logError(message: string, error: any) {
   console.error(`❌ ${message}:`, error.message, error.stack)
 }
 
+// Utility function to safely parse JSON
+async function safeParseJSON(response: Response) {
+  try {
+    const text = await response.text();
+    return JSON.parse(text);
+  } catch (error) {
+    logError('Error parsing JSON response', error);
+    return null;
+  }
+}
+
 export default async function CategoryTemplate({
   searchParams,
   params,
@@ -55,9 +66,10 @@ export default async function CategoryTemplate({
 
     // Fetch category
     const categoryData = await getCategoryByHandle(category).catch((error) => {
-      logError('Error fetching category', error)
-      return null
-    })
+      logError('Error fetching category', error);
+      return null;
+    });
+    console.log('📦 Category Data:', categoryData);
     currentCategory = categoryData?.product_categories?.at(-1) || null
     if (!currentCategory) {
       console.error('❌ Current category not found for:', category)
@@ -65,7 +77,7 @@ export default async function CategoryTemplate({
     }
 
     // Fetch filters
-    filters = await getStoreFilters().catch((error) => {
+    filters = await getStoreFilters().then(safeParseJSON).catch((error) => {
       logError('Error fetching filters', error)
       return []
     })
@@ -85,14 +97,17 @@ export default async function CategoryTemplate({
       material: material?.split(','),
       price: price?.split(','),
     }).catch((error) => {
-      logError('Error fetching products', error)
-      return { results: [], count: 0 }
-    })
+      logError('Error fetching products', error);
+      return { results: [], count: 0 };
+    });
 
-    results = searchRes?.results || []
-    count = searchRes?.count || 0
-    if (results.length === 0) {
-      console.warn('⚠️ No products found for the given search parameters.')
+    if (!searchRes || searchRes.results === undefined) {
+      console.warn('⚠️ No products found for the given search parameters.');
+      results = [];
+      count = 0;
+    } else {
+      results = searchRes.results;
+      count = searchRes.count;
     }
 
     // Fetch recommended products
@@ -154,7 +169,7 @@ export default async function CategoryTemplate({
           )}
         </Suspense>
       </Container>
-      {recommendedProducts.length > 0 ? (
+      {recommendedProducts && recommendedProducts.length > 0 ? (
         <Suspense fallback={<SkeletonProductsCarousel />}>
           <ProductCarousel
             products={recommendedProducts}
@@ -162,7 +177,9 @@ export default async function CategoryTemplate({
             title="Recommended products"
           />
         </Suspense>
-      ) : null}
+      ) : (
+        console.warn('⚠️ No recommended products found.')
+      )}
     </>
   )
 }
