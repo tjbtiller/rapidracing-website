@@ -6,9 +6,12 @@
     "solace-medusa-starter"
   ],
   "scripts": {
-    "dev": "next dev --turbopack -p 8000",
-    "build": "next build",
-    "start": "next start -p 8000",
+    "wait": "await-backend",
+    "launcher": "launch-storefront",
+    "dev": "npm run wait && npm run launcher dev",
+    "build": "npm run wait && npm run launcher build",
+    "start": "npm run launcher start",
+    "build:next": "next build",
     "lint": "next lint",
     "format:write": "prettier --write .",
     "format": "prettier --check .",
