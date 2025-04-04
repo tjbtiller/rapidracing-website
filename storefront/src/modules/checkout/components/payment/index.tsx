@@ -1,19 +1,29 @@
-"use client"
+'use client'
 
-import { useCallback, useContext, useEffect, useMemo, useState } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { RadioGroup } from "@headlessui/react"
-import ErrorMessage from "@modules/checkout/components/error-message"
-import { CheckCircleSolid, CreditCard } from "@medusajs/icons"
-import { Button, Container, Heading, Text, Tooltip, clx } from "@medusajs/ui"
-import { CardElement } from "@stripe/react-stripe-js"
-import { StripeCardElementOptions } from "@stripe/stripe-js"
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
-import Divider from "@modules/common/components/divider"
-import PaymentContainer from "@modules/checkout/components/payment-container"
-import { isStripe as isStripeFunc, paymentInfoMap } from "@lib/constants"
-import { StripeContext } from "@modules/checkout/components/payment-wrapper"
-import { initiatePaymentSession } from "@lib/data/cart"
+import { RadioGroup } from '@headlessui/react'
+import { isStripe as isStripeFunc, paymentInfoMap } from '@lib/constants'
+import { initiatePaymentSession } from '@lib/data/cart'
+import { cn } from '@lib/util/cn'
+import ErrorMessage from '@modules/checkout/components/error-message'
+import PaymentContainer from '@modules/checkout/components/payment-container'
+import { StripeContext } from '@modules/checkout/components/payment-wrapper'
+import { Box } from '@modules/common/components/box'
+import { Button } from '@modules/common/components/button'
+import { Heading } from '@modules/common/components/heading'
+import { Stepper } from '@modules/common/components/stepper'
+import { Text } from '@modules/common/components/text'
+import { StripeIcon } from '@modules/common/icons'
+import { CardElement } from '@stripe/react-stripe-js'
+import { StripeCardElementOptions } from '@stripe/stripe-js'
 
 const Payment = ({
   cart,
@@ -22,8 +32,8 @@ const Payment = ({
   cart: any
   availablePaymentMethods: any[]
 }) => {
-  const activeSession = cart.payment_collection?.payment_sessions?.find(
-    (paymentSession: any) => paymentSession.status === "pending"
+  const activeSession = cart?.payment_collection?.payment_sessions?.find(
+    (paymentSession: any) => paymentSession.status === 'pending'
   )
 
   const [isLoading, setIsLoading] = useState(false)
@@ -31,14 +41,14 @@ const Payment = ({
   const [cardBrand, setCardBrand] = useState<string | null>(null)
   const [cardComplete, setCardComplete] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
-    activeSession?.provider_id ?? ""
+    activeSession?.provider_id ?? ''
   )
 
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "payment"
+  const isOpen = searchParams.get('step') === 'payment'
 
   const isStripe = isStripeFunc(activeSession?.provider_id)
   const stripeReady = useContext(StripeContext)
@@ -53,15 +63,15 @@ const Payment = ({
     return {
       style: {
         base: {
-          fontFamily: "Inter, sans-serif",
-          color: "#424270",
-          "::placeholder": {
-            color: "rgb(107 114 128)",
+          fontFamily: 'Inter, sans-serif',
+          color: '#424270',
+          '::placeholder': {
+            color: 'rgb(107 114 128)',
           },
         },
       },
       classes: {
-        base: "pt-3 pb-1 block w-full h-11 px-4 mt-0 bg-ui-bg-field border rounded-md appearance-none focus:outline-none focus:ring-0 focus:shadow-borders-interactive-with-active border-ui-border-base hover:bg-ui-bg-field-hover transition-all duration-300 ease-in-out",
+        base: 'pt-3 pb-1 block w-full h-11 px-4 mt-0 bg-ui-bg-field border rounded-md appearance-none focus:outline-none focus:ring-0 focus:shadow-borders-interactive-with-active border-ui-border-base hover:bg-ui-bg-field-hover transition-all duration-300 ease-in-out',
       },
     }
   }, [])
@@ -77,31 +87,23 @@ const Payment = ({
   )
 
   const handleEdit = () => {
-    router.push(pathname + "?" + createQueryString("step", "payment"), {
+    router.push(pathname + '?' + createQueryString('step', 'payment'), {
       scroll: false,
     })
   }
 
-  const handleSubmit = async () => {
+  const handlePaymentMethodChange = async (value: string) => {
+    setSelectedPaymentMethod(value)
+    await handleSubmit(value)
+  }
+
+  const handleSubmit = async (paymentMethodId: string) => {
     setIsLoading(true)
+
     try {
-      const shouldInputCard =
-        isStripeFunc(selectedPaymentMethod) && !activeSession
-
-      if (!activeSession) {
-        await initiatePaymentSession(cart, {
-          provider_id: selectedPaymentMethod,
-        })
-      }
-
-      if (!shouldInputCard) {
-        return router.push(
-          pathname + "?" + createQueryString("step", "review"),
-          {
-            scroll: false,
-          }
-        )
-      }
+      await initiatePaymentSession(cart, {
+        provider_id: paymentMethodId,
+      })
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -109,45 +111,61 @@ const Payment = ({
     }
   }
 
+  // Set payment method if there is only one available
+  useEffect(() => {
+    setError(null)
+
+    if (
+      isOpen &&
+      availablePaymentMethods.length === 1 &&
+      !selectedPaymentMethod
+    ) {
+      const singlePaymentMethod = availablePaymentMethods[0].id
+      handlePaymentMethodChange(singlePaymentMethod)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, availablePaymentMethods, selectedPaymentMethod])
+
   useEffect(() => {
     setError(null)
   }, [isOpen])
 
   return (
-    <div className="bg-white">
-      <div className="flex flex-row items-center justify-between mb-6">
+    <Box className="bg-primary p-5">
+      <Box className="mb-6 flex flex-row items-center justify-between">
         <Heading
-          level="h2"
-          className={clx(
-            "flex flex-row text-3xl-regular gap-x-2 items-baseline",
-            {
-              "opacity-50 pointer-events-none select-none":
-                !isOpen && !paymentReady,
-            }
-          )}
+          as="h2"
+          className={cn('flex flex-row items-center gap-x-4 text-2xl', {
+            'pointer-events-none select-none': !isOpen && !paymentReady,
+          })}
         >
+          {!isOpen && !paymentReady ? (
+            <Stepper>3</Stepper>
+          ) : !isOpen && paymentReady ? (
+            <Stepper state="completed" />
+          ) : (
+            <Stepper state="focussed">3</Stepper>
+          )}
           Payment
-          {!isOpen && paymentReady && <CheckCircleSolid />}
         </Heading>
         {!isOpen && paymentReady && (
-          <Text>
-            <button
-              onClick={handleEdit}
-              className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
-              data-testid="edit-payment-button"
-            >
-              Edit
-            </button>
-          </Text>
+          <Button
+            variant="tonal"
+            size="sm"
+            onClick={handleEdit}
+            data-testid="edit-payment-button"
+          >
+            Edit
+          </Button>
         )}
-      </div>
-      <div>
-        <div className={isOpen ? "block" : "hidden"}>
+      </Box>
+      <Box>
+        <Box className={isOpen ? 'block' : 'hidden'}>
           {!paidByGiftcard && availablePaymentMethods?.length && (
             <>
               <RadioGroup
                 value={selectedPaymentMethod}
-                onChange={(value: string) => setSelectedPaymentMethod(value)}
+                onChange={handlePaymentMethodChange}
               >
                 {availablePaymentMethods
                   .sort((a, b) => {
@@ -166,12 +184,11 @@ const Payment = ({
               </RadioGroup>
               {isStripe && stripeReady && (
                 <div className="mt-5 transition-all duration-150 ease-in-out">
-                  <Text className="txt-medium-plus text-ui-fg-base mb-1">
+                  <Text className="mb-3 text-md text-basic-primary">
                     Enter your card details:
                   </Text>
-
                   <CardElement
-                    options={useOptions as StripeCardElementOptions}
+                    options={useOptions}
                     onChange={(e) => {
                       setCardBrand(
                         e.brand &&
@@ -187,8 +204,8 @@ const Payment = ({
           )}
 
           {paidByGiftcard && (
-            <div className="flex flex-col w-1/3">
-              <Text className="txt-medium-plus text-ui-fg-base mb-1">
+            <div className="flex flex-col">
+              <Text className="txt-medium-plus mb-1 text-ui-fg-base">
                 Payment method
               </Text>
               <Text
@@ -205,76 +222,74 @@ const Payment = ({
             data-testid="payment-method-error-message"
           />
 
-          <Button
-            size="large"
-            className="mt-6"
-            onClick={handleSubmit}
-            isLoading={isLoading}
-            disabled={
-              (isStripe && !cardComplete) ||
-              (!selectedPaymentMethod && !paidByGiftcard)
-            }
-            data-testid="submit-payment-button"
-          >
-            {!activeSession && isStripeFunc(selectedPaymentMethod)
-              ? " Enter card details"
-              : "Continue to review"}
-          </Button>
-        </div>
+          {!activeSession && isStripeFunc(selectedPaymentMethod) && (
+            <Button
+              className="mt-6"
+              onClick={() => handleSubmit(selectedPaymentMethod)}
+              isLoading={isLoading}
+              disabled={
+                (isStripe && !cardComplete) ||
+                (!selectedPaymentMethod && !paidByGiftcard)
+              }
+              data-testid="submit-payment-button"
+            >
+              Enter card details
+            </Button>
+          )}
+        </Box>
 
-        <div className={isOpen ? "hidden" : "block"}>
+        <Box className={isOpen ? 'hidden' : 'block'}>
           {cart && paymentReady && activeSession ? (
-            <div className="flex items-start gap-x-1 w-full">
-              <div className="flex flex-col w-1/3">
-                <Text className="txt-medium-plus text-ui-fg-base mb-1">
+            <Box className="flex flex-col items-start">
+              <Box className="flex w-full flex-col p-4">
+                <Text size="lg" className="font-normal text-basic-primary">
                   Payment method
                 </Text>
                 <Text
-                  className="txt-medium text-ui-fg-subtle"
+                  className="font-normal text-secondary"
                   data-testid="payment-method-summary"
                 >
                   {paymentInfoMap[selectedPaymentMethod]?.title ||
                     selectedPaymentMethod}
                 </Text>
-              </div>
-              <div className="flex flex-col w-1/3">
-                <Text className="txt-medium-plus text-ui-fg-base mb-1">
+              </Box>
+              <Box className="flex w-full flex-col p-4">
+                <Text size="lg" className="font-normal text-basic-primary">
                   Payment details
                 </Text>
                 <div
-                  className="flex gap-2 txt-medium text-ui-fg-subtle items-center"
+                  className="flex items-center gap-2 text-md text-basic-primary"
                   data-testid="payment-details-summary"
                 >
-                  <Container className="flex items-center h-7 w-fit p-2 bg-ui-button-neutral-hover">
+                  <Box className="flex h-7 w-fit items-center p-2">
                     {paymentInfoMap[selectedPaymentMethod]?.icon || (
-                      <CreditCard />
+                      <StripeIcon />
                     )}
-                  </Container>
-                  <Text>
+                  </Box>
+                  <Text className="font-normal text-secondary">
                     {isStripeFunc(selectedPaymentMethod) && cardBrand
                       ? cardBrand
-                      : "Another step will appear"}
+                      : 'Another step will appear'}
                   </Text>
                 </div>
-              </div>
-            </div>
+              </Box>
+            </Box>
           ) : paidByGiftcard ? (
-            <div className="flex flex-col w-1/3">
-              <Text className="txt-medium-plus text-ui-fg-base mb-1">
+            <Box className="flex w-full flex-col p-4">
+              <Text size="lg" className="font-normal text-basic-primary">
                 Payment method
               </Text>
               <Text
-                className="txt-medium text-ui-fg-subtle"
+                className="font-normal text-secondary"
                 data-testid="payment-method-summary"
               >
                 Gift card
               </Text>
-            </div>
+            </Box>
           ) : null}
-        </div>
-      </div>
-      <Divider className="mt-8" />
-    </div>
+        </Box>
+      </Box>
+    </Box>
   )
 }
 

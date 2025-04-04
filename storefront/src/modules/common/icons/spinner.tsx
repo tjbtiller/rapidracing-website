@@ -1,10 +1,10 @@
-import React from "react"
+import React from 'react'
 
-import { IconProps } from "types/icon"
+import { IconProps } from 'types/icon'
 
-const Spinner: React.FC<IconProps> = ({
-  size = "16",
-  color = "currentColor",
+export const Spinner: React.FC<IconProps> = ({
+  size = '16',
+  color = 'currentColor',
   ...attributes
 }) => {
   return (
@@ -33,5 +33,3 @@ const Spinner: React.FC<IconProps> = ({
     </svg>
   )
 }
-
-export default Spinner

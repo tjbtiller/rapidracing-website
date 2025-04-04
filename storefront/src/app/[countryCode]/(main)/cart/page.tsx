@@ -1,13 +1,17 @@
-import { Metadata } from "next"
-import CartTemplate from "@modules/cart/templates"
+import { Suspense } from 'react'
+import { Metadata } from 'next'
 
-import { enrichLineItems, retrieveCart } from "@lib/data/cart"
-import { HttpTypes } from "@medusajs/types"
-import { getCustomer } from "@lib/data/customer"
+import { enrichLineItems, retrieveCart } from '@lib/data/cart'
+import { getProductsList } from '@lib/data/products'
+import { getRegion } from '@lib/data/regions'
+import CartTemplate from '@modules/cart/templates'
+import { Container } from '@modules/common/components/container'
+import { ProductCarousel } from '@modules/products/components/product-carousel'
+import SkeletonProductsCarousel from '@modules/skeletons/templates/skeleton-products-carousel'
 
 export const metadata: Metadata = {
-  title: "Cart",
-  description: "View your cart",
+  title: 'Cart',
+  description: 'View your cart',
 }
 
 const fetchCart = async () => {
@@ -18,16 +22,43 @@ const fetchCart = async () => {
   }
 
   if (cart?.items?.length) {
-    const enrichedItems = await enrichLineItems(cart?.items, cart?.region_id!)
-    cart.items = enrichedItems as HttpTypes.StoreCartLineItem[]
+    const enrichedItems = await enrichLineItems(cart?.items, cart?.region_id)
+    cart.items = enrichedItems
   }
 
   return cart
 }
 
-export default async function Cart() {
-  const cart = await fetchCart()
-  const customer = await getCustomer()
+export default async function Cart(props: {
+  params: Promise<{ countryCode: string }>
+}) {
+  const params = await props.params
 
-  return <CartTemplate cart={cart} customer={customer} />
+  const { countryCode } = params
+
+  const cart = await fetchCart()
+
+  const [region, { products }] = await Promise.all([
+    getRegion(countryCode),
+    getProductsList({
+      pageParam: 0,
+      queryParams: {
+        limit: 9,
+      },
+      countryCode,
+    }).then(({ response }) => response),
+  ])
+
+  return (
+    <Container className="max-w-full bg-secondary !p-0">
+      <CartTemplate cart={cart} />
+      <Suspense fallback={<SkeletonProductsCarousel />}>
+        <ProductCarousel
+          products={products}
+          title="You may also like"
+          regionId={region.id}
+        />
+      </Suspense>
+    </Container>
+  )
 }

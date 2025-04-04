@@ -1,10 +1,10 @@
-import React from "react"
+import React from 'react'
 
-import { IconProps } from "types/icon"
+import { IconProps } from 'types/icon'
 
-const FastDelivery: React.FC<IconProps> = ({
-  size = "16",
-  color = "currentColor",
+export const FastDeliveryIcon: React.FC<IconProps> = ({
+  size = '16',
+  color = 'currentColor',
   ...attributes
 }) => {
   return (
@@ -61,5 +61,3 @@ const FastDelivery: React.FC<IconProps> = ({
     </svg>
   )
 }
-
-export default FastDelivery

@@ -1,12 +1,11 @@
-"use client"
+'use client'
 
-import React, { useEffect } from "react"
+import React, { useActionState, useEffect } from 'react'
 
-import Input from "@modules/common/components/input"
+import { HttpTypes } from '@medusajs/types'
+import { Input } from '@modules/common/components/input'
 
-import AccountInfo from "../account-info"
-import { useFormState } from "react-dom"
-import { HttpTypes } from "@medusajs/types"
+import AccountInfo from '../account-info'
 
 type MyInformationProps = {
   customer: HttpTypes.StoreCustomer
@@ -16,7 +15,7 @@ const ProfileName: React.FC<MyInformationProps> = ({ customer }) => {
   const [successState, setSuccessState] = React.useState(false)
 
   // TODO: Add support for password updates
-  const [state, formAction] = useFormState((() => {}) as any, {
+  const [state, formAction] = useActionState((() => {}) as any, {
     customer,
     success: false,
     error: null,
@@ -45,21 +44,18 @@ const ProfileName: React.FC<MyInformationProps> = ({ customer }) => {
       >
         <div className="grid grid-cols-2 gap-4">
           <Input
-            label="Old password"
             name="old_password"
             required
             type="password"
             data-testid="old-password-input"
           />
           <Input
-            label="New password"
             type="password"
             name="new_password"
             required
             data-testid="new-password-input"
           />
           <Input
-            label="Confirm password"
             type="password"
             name="confirm_password"
             required
