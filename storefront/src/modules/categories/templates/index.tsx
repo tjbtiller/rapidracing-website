@@ -28,6 +28,11 @@ function logError(message: string, error: any) {
 // Utility function to safely parse JSON
 async function safeParseJSON(response: Response) {
   try {
+    const contentType = response.headers.get('Content-Type');
+    if (!contentType || !contentType.includes('application/json')) {
+      logError('Invalid Content-Type for JSON response', { contentType });
+      return null;
+    }
     const text = await response.text();
     return JSON.parse(text);
   } catch (error) {
@@ -78,15 +83,15 @@ export default async function CategoryTemplate({
 
     // Fetch filters
     filters = await getStoreFilters().then(safeParseJSON).catch((error) => {
-      logError('Error fetching filters', error)
-      return []
-    })
+      logError('Error fetching filters', error);
+      return [];
+    });
     if (!filters || filters.length === 0) {
-      console.warn('⚠️ No filters available.')
+      console.warn('⚠️ No filters available.');
     }
 
     // Fetch products
-    const pageNumber = page ? parseInt(page) : 1
+    const pageNumber = page ? parseInt(page) : 1;
     const searchRes = await search({
       currency_code: region.currency_code,
       category_id: currentCategory.id,
@@ -96,10 +101,28 @@ export default async function CategoryTemplate({
       type: type?.split(','),
       material: material?.split(','),
       price: price?.split(','),
+    }).then((response) => {
+      if (!response || response.status !== 200) {
+        logError('Error fetching products', { status: response?.status });
+        return { results: [], count: 0 };
+      }
+      return response;
     }).catch((error) => {
       logError('Error fetching products', error);
       return { results: [], count: 0 };
     });
+
+    console.log('🔎 Search Parameters:', {
+      currency_code: region.currency_code,
+      category_id: currentCategory.id,
+      order: sortBy || 'relevance',
+      page: pageNumber,
+      collection: collection?.split(','),
+      type: type?.split(','),
+      material: material?.split(','),
+      price: price?.split(','),
+    });
+    console.log('📦 Search Results:', searchRes);
 
     if (!searchRes || searchRes.results === undefined) {
       console.warn('⚠️ No products found for the given search parameters.');
@@ -116,11 +139,12 @@ export default async function CategoryTemplate({
       queryParams: { limit: 9 },
       countryCode,
     }).catch((error) => {
-      logError('Error fetching recommended products', error)
-      return { response: { products: [] } }
-    })
+      logError('Error fetching recommended products', error);
+      return { response: { products: [] } };
+    });
 
-    recommendedProducts = productList?.response?.products || []
+    recommendedProducts = productList?.response?.products || [];
+    console.log('📦 Recommended Products:', recommendedProducts);
     if (recommendedProducts.length === 0) {
       console.warn('⚠️ No recommended products found.')
     }
