@@ -28,7 +28,7 @@ export default async function Home(props: {
 }) {
   const params = await props.params
 
-  const { countryCode } = params
+  const countryCode = params?.countryCode || 'us'
 
   const [{ collections: collectionsList }, { products }] = await Promise.all([
     getCollectionsList(),

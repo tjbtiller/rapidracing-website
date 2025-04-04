@@ -22,15 +22,13 @@ const regionMap = new Map<string, HttpTypes.StoreRegion>()
 
 export const getRegion = cache(async function (countryCode: string) {
   try {
-    if (regionMap.has(countryCode)) {
-      return regionMap.get(countryCode)
-    }
+    console.log("📦 Fetching regions from Medusa...")
 
     const regions = await listRegions()
 
-    if (!regions) {
-      return null
-    }
+    console.log("✅ Regions fetched:", regions)
+
+    if (!regions) return null
 
     regions.forEach((region) => {
       region.countries?.forEach((c) => {
@@ -44,6 +42,7 @@ export const getRegion = cache(async function (countryCode: string) {
 
     return region
   } catch (e: any) {
+    console.error("❌ getRegion failed:", e)
     return null
   }
 })
