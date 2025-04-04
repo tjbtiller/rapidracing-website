@@ -2,7 +2,7 @@
 
 import waitOn from 'wait-on'
 
-const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
+const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'https://backend-production-6e0f.up.railway.app'
 
 console.log('⏳ Waiting for backend:', backendUrl)
 
