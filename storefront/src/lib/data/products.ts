@@ -61,16 +61,22 @@ export const getProductsList = async function ({
 
   const limit = queryParams?.limit || 12
   const offset = Math.max(0, (pageParam - 1) * limit)
+
   const region = await getRegion(countryCode)
+  console.log('📦 Region from getRegion():', region)
 
   if (!region) {
+    console.error('❌ No region found for countryCode:', countryCode)
     return {
       response: { products: [], count: 0 },
       nextPage: null,
     }
   }
-  return sdk.store.product
-    .list(
+
+  try {
+    console.log(`🔎 Fetching products with region_id: ${region.id}`)
+
+    const { products } = await sdk.store.product.list(
       {
         limit,
         offset,
@@ -81,26 +87,34 @@ export const getProductsList = async function ({
       },
       { next: { tags: ['products'] } }
     )
-    .then(({ products }) => {
-      const filteredProducts = products.filter((product) => {
-        if (product.variants.length === 1) {
-          return product.variants[0].inventory_quantity > 0
-        }
-        return product.variants.length > 1
-      })
 
-      const filteredCount = filteredProducts.length
-      const nextPage = filteredCount > offset + limit ? pageParam + 1 : null
+    console.log(`✅ Retrieved ${products.length} products`)
 
-      return {
-        response: {
-          products: filteredProducts,
-          count: filteredCount,
-        },
-        nextPage: nextPage,
-        queryParams,
+    const filteredProducts = products.filter((product) => {
+      if (product.variants.length === 1) {
+        return product.variants[0].inventory_quantity > 0
       }
+      return product.variants.length > 1
     })
+
+    const filteredCount = filteredProducts.length
+    const nextPage = filteredCount > offset + limit ? pageParam + 1 : null
+
+    return {
+      response: {
+        products: filteredProducts,
+        count: filteredCount,
+      },
+      nextPage: nextPage,
+      queryParams,
+    }
+  } catch (err: any) {
+    console.error('❌ Error fetching products from Medusa:', err?.message || err)
+    return {
+      response: { products: [], count: 0 },
+      nextPage: null,
+    }
+  }
 }
 
 export const getProductsListByCollectionId = async function ({
