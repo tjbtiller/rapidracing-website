@@ -15,62 +15,59 @@ export const metadata: Metadata = {
 }
 
 export default async function AboutUsPage() {
-  let aboutUsData = null
-  let blogPosts = []
-
   try {
-    // Fetch About Us data
-    try {
-      const aboutUsResponse = await getAboutUs()
-      aboutUsData = aboutUsResponse?.data || null
+    console.log('📦 Fetching About Us and blog data...')
 
-      if (!aboutUsData) {
-        console.error('❌ About Us data is missing or invalid.')
-        return notFound() // Critical data is missing
-      }
-    } catch (error) {
-      console.error('❌ Error fetching About Us data:', error.message, error.stack)
-      return notFound() // Critical error
+    // Fetch About Us
+    const aboutUsResponse = await getAboutUs()
+    const aboutUsData = aboutUsResponse?.data
+
+    if (!aboutUsData) {
+      console.error('❌ No About Us data returned from Strapi')
+      return notFound()
     }
 
-    // Fetch Explore Blog data
+    // Destructure CMS content
+    const {
+      Banner: bannerData,
+      OurStory,
+      WhyUs,
+      OurCraftsmanship,
+      Numbers,
+    } = aboutUsData
+
+    if (!bannerData || !OurStory || !WhyUs || !OurCraftsmanship || !Numbers) {
+      console.error('❌ One or more critical sections are missing in About Us data')
+      return notFound()
+    }
+
+    // Fetch blog posts
+    let blogPosts = []
     try {
       const blogResponse = await getExploreBlogData()
       blogPosts = blogResponse?.data || []
-
-      if (!blogPosts.length) {
-        console.warn('⚠️ No blog posts available.')
-      }
-    } catch (error) {
-      console.error('❌ Error fetching Explore Blog data:', error.message, error.stack)
-      blogPosts = [] // Fallback to an empty array
+    } catch (err) {
+      console.warn('⚠️ Failed to fetch blog posts:', err)
     }
-  } catch (error) {
-    console.error('❌ Unexpected error in AboutUsPage:', error.message, error.stack)
-    return notFound() // Critical error
+
+    console.log('✅ About Us page rendered successfully.')
+
+    return (
+      <>
+        {bannerData && <Banner data={bannerData} />}
+        {OurStory && <BasicContentSection data={OurStory} />}
+        {WhyUs && <FramedTextSection data={WhyUs} />}
+        {OurCraftsmanship && <BasicContentSection data={OurCraftsmanship} />}
+        {Numbers && <NumericalSection data={Numbers} />}
+        {blogPosts?.length > 0 ? (
+          <ExploreBlog posts={blogPosts} />
+        ) : (
+          <p className="text-center text-secondary mt-6">No blog posts available.</p>
+        )}
+      </>
+    )
+  } catch (error: any) {
+    console.error('❌ Unexpected error in AboutUsPage:', error?.message || error)
+    return notFound()
   }
-
-  // Destructure About Us data
-  const { Banner: bannerData, OurStory, WhyUs, OurCraftsmanship, Numbers } = aboutUsData || {}
-
-  // Ensure critical sections are present
-  if (!bannerData || !OurStory || !WhyUs || !OurCraftsmanship || !Numbers) {
-    console.error('❌ Critical About Us sections are missing.')
-    return notFound() // Critical data is missing
-  }
-
-  return (
-    <>
-      {bannerData && <Banner data={bannerData} />}
-      {OurStory && <BasicContentSection data={OurStory} />}
-      {WhyUs && <FramedTextSection data={WhyUs} />}
-      {OurCraftsmanship && <BasicContentSection data={OurCraftsmanship} />}
-      {Numbers && <NumericalSection data={Numbers} />}
-      {blogPosts.length > 0 ? (
-        <ExploreBlog posts={blogPosts} />
-      ) : (
-        <p className="text-center text-secondary">No blog posts available at the moment.</p>
-      )}
-    </>
-  )
 }
