@@ -20,6 +20,11 @@ import PaginatedProducts from '@modules/store/templates/paginated-products'
 
 export const runtime = 'edge'
 
+// Reusable error logging function
+function logError(message: string, error: any) {
+  console.error(`❌ ${message}:`, error.message, error.stack)
+}
+
 export default async function CategoryTemplate({
   searchParams,
   params,
@@ -39,86 +44,73 @@ export default async function CategoryTemplate({
 
   try {
     // Fetch region
-    try {
-      region = await getRegion(countryCode)
-      if (!region) {
-        console.error('❌ Region not found for countryCode:', countryCode)
-        return notFound()
-      }
-    } catch (error) {
-      console.error('❌ Error fetching region:', error.message, error.stack)
+    region = await getRegion(countryCode).catch((error) => {
+      logError('Error fetching region', error)
+      return null
+    })
+    if (!region) {
+      console.error('❌ Region not found for countryCode:', countryCode)
       return notFound()
     }
 
     // Fetch category
-    try {
-      const { product_categories } = await getCategoryByHandle(category)
-      currentCategory = product_categories[product_categories.length - 1]
-      if (!currentCategory) {
-        console.error('❌ Current category not found for:', category)
-        return notFound()
-      }
-    } catch (error) {
-      console.error('❌ Error fetching category:', error.message, error.stack)
+    const categoryData = await getCategoryByHandle(category).catch((error) => {
+      logError('Error fetching category', error)
+      return null
+    })
+    currentCategory = categoryData?.product_categories?.at(-1) || null
+    if (!currentCategory) {
+      console.error('❌ Current category not found for:', category)
       return notFound()
     }
 
     // Fetch filters
-    try {
-      filters = await getStoreFilters()
-      if (!filters || filters.length === 0) {
-        console.warn('⚠️ No filters available.')
-        filters = [] // Fallback to an empty array
-      }
-    } catch (error) {
-      console.error('❌ Error fetching filters:', error.message, error.stack)
-      filters = [] // Fallback to an empty array
+    filters = await getStoreFilters().catch((error) => {
+      logError('Error fetching filters', error)
+      return []
+    })
+    if (!filters || filters.length === 0) {
+      console.warn('⚠️ No filters available.')
     }
 
     // Fetch products
-    try {
-      const pageNumber = page ? parseInt(page) : 1
-      const searchRes = await search({
-        currency_code: region.currency_code,
-        category_id: currentCategory.id,
-        order: sortBy || 'relevance',
-        page: pageNumber,
-        collection: collection?.split(','),
-        type: type?.split(','),
-        material: material?.split(','),
-        price: price?.split(','),
-      })
+    const pageNumber = page ? parseInt(page) : 1
+    const searchRes = await search({
+      currency_code: region.currency_code,
+      category_id: currentCategory.id,
+      order: sortBy || 'relevance',
+      page: pageNumber,
+      collection: collection?.split(','),
+      type: type?.split(','),
+      material: material?.split(','),
+      price: price?.split(','),
+    }).catch((error) => {
+      logError('Error fetching products', error)
+      return { results: [], count: 0 }
+    })
 
-      results = searchRes?.results || []
-      count = searchRes?.count || 0
-
-      if (results.length === 0) {
-        console.warn('⚠️ No products found for the given search parameters.')
-      }
-    } catch (error) {
-      console.error('❌ Error fetching products:', error.message, error.stack)
-      results = [] // Fallback to an empty array
-      count = 0
+    results = searchRes?.results || []
+    count = searchRes?.count || 0
+    if (results.length === 0) {
+      console.warn('⚠️ No products found for the given search parameters.')
     }
 
     // Fetch recommended products
-    try {
-      const productList = await getProductsList({
-        pageParam: 0,
-        queryParams: { limit: 9 },
-        countryCode,
-      })
+    const productList = await getProductsList({
+      pageParam: 0,
+      queryParams: { limit: 9 },
+      countryCode,
+    }).catch((error) => {
+      logError('Error fetching recommended products', error)
+      return { response: { products: [] } }
+    })
 
-      recommendedProducts = productList?.response?.products || []
-      if (recommendedProducts.length === 0) {
-        console.warn('⚠️ No recommended products found.')
-      }
-    } catch (error) {
-      console.error('❌ Error fetching recommended products:', error.message, error.stack)
-      recommendedProducts = [] // Fallback to an empty array
+    recommendedProducts = productList?.response?.products || []
+    if (recommendedProducts.length === 0) {
+      console.warn('⚠️ No recommended products found.')
     }
   } catch (error) {
-    console.error('❌ Unexpected error in CategoryTemplate:', error.message, error.stack)
+    logError('Unexpected error in CategoryTemplate', error)
     return notFound()
   }
 
