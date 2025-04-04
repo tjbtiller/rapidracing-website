@@ -26,11 +26,11 @@ export default async function AboutUsPage() {
 
       if (!aboutUsData) {
         console.error('❌ About Us data is missing or invalid.')
-        return notFound()
+        return notFound() // Critical data is missing
       }
     } catch (error) {
       console.error('❌ Error fetching About Us data:', error.message, error.stack)
-      return notFound()
+      return notFound() // Critical error
     }
 
     // Fetch Explore Blog data
@@ -47,10 +47,17 @@ export default async function AboutUsPage() {
     }
   } catch (error) {
     console.error('❌ Unexpected error in AboutUsPage:', error.message, error.stack)
-    return notFound()
+    return notFound() // Critical error
   }
 
+  // Destructure About Us data
   const { Banner: bannerData, OurStory, WhyUs, OurCraftsmanship, Numbers } = aboutUsData || {}
+
+  // Ensure critical sections are present
+  if (!bannerData || !OurStory || !WhyUs || !OurCraftsmanship || !Numbers) {
+    console.error('❌ Critical About Us sections are missing.')
+    return notFound() // Critical data is missing
+  }
 
   return (
     <>
@@ -59,7 +66,11 @@ export default async function AboutUsPage() {
       {WhyUs && <FramedTextSection data={WhyUs} />}
       {OurCraftsmanship && <BasicContentSection data={OurCraftsmanship} />}
       {Numbers && <NumericalSection data={Numbers} />}
-      {blogPosts.length > 0 && <ExploreBlog posts={blogPosts} />}
+      {blogPosts.length > 0 ? (
+        <ExploreBlog posts={blogPosts} />
+      ) : (
+        <p className="text-center text-secondary">No blog posts available at the moment.</p>
+      )}
     </>
   )
 }
