@@ -1,3 +1,5 @@
+'use client'
+
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 
@@ -27,33 +29,48 @@ export default async function StoreTemplate({
   searchParams: Record<string, string>
   params?: { countryCode?: string }
 }) {
-  const { countryCode } = await params
-  const { sortBy, page, collection, type, material, price } = await searchParams
-  const region = await getRegion(countryCode)
+  const countryCode = params?.countryCode || 'us'
+  const pageNumber = searchParams.page ? parseInt(searchParams.page) : 1
 
-  if (!region) {
+  let region = null
+  let filters = []
+  let results = []
+  let count = 0
+  let recommendedProducts = []
+
+  try {
+    region = await getRegion(countryCode)
+    if (!region) {
+      console.error('❌ No region found for countryCode:', countryCode)
+      return notFound()
+    }
+
+    filters = await getStoreFilters()
+
+    const searchRes = await search({
+      currency_code: region.currency_code,
+      order: searchParams.sortBy,
+      page: pageNumber,
+      collection: searchParams.collection?.split(','),
+      type: searchParams.type?.split(','),
+      material: searchParams.material?.split(','),
+      price: searchParams.price?.split(','),
+    })
+
+    results = searchRes.results || []
+    count = searchRes.count || 0
+
+    const productList = await getProductsList({
+      pageParam: 0,
+      queryParams: { limit: 9 },
+      countryCode,
+    })
+
+    recommendedProducts = productList?.response?.products || []
+  } catch (error) {
+    console.error('❌ Error in StoreTemplate:', error)
     return notFound()
   }
-
-  const pageNumber = page ? parseInt(page) : 1
-  const filters = await getStoreFilters()
-
-  const { results, count } = await search({
-    currency_code: region.currency_code,
-    order: sortBy,
-    page: pageNumber,
-    collection: collection?.split(','),
-    type: type?.split(','),
-    material: material?.split(','),
-    price: price?.split(','),
-  })
-
-  // TODO: Add logic in future
-  const { products: recommendedProducts } = await getProductsList({
-    pageParam: 0,
-    queryParams: { limit: 9 },
-    countryCode: countryCode,
-  }).then(({ response }) => response)
 
   return (
     <>
@@ -71,7 +88,7 @@ export default async function StoreTemplate({
             </ProductFiltersDrawer>
             <RefinementList
               options={storeSortOptions}
-              sortBy={sortBy || 'relevance'}
+              sortBy={searchParams.sortBy || 'relevance'}
             />
           </Box>
         </Box>
@@ -91,7 +108,8 @@ export default async function StoreTemplate({
           )}
         </Suspense>
       </Container>
-      {recommendedProducts && (
+
+      {recommendedProducts.length > 0 && (
         <Suspense fallback={<SkeletonProductsCarousel />}>
           <ProductCarousel
             products={recommendedProducts}
