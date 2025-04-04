@@ -1,6 +1,9 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 
-const { execaCommandSync } = require('execa')
+import waitOn from 'wait-on'
 
-execaCommandSync('pnpm run wait', { stdio: 'inherit' })
-execaCommandSync('pnpm run build', { stdio: 'inherit' })
+await waitOn({
+  resources: [process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'],
+  interval: 1000,
+  timeout: 300000, // 5 minutes
+})
