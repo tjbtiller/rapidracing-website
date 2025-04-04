@@ -40,26 +40,34 @@ export default async function StoreTemplate({
 
   try {
     region = await getRegion(countryCode)
-    if (!region) {
-      console.error('❌ No region found for countryCode:', countryCode)
-      return notFound()
+    console.log('Region:', region);
+
+    if (!region || !region.currency_code) {
+      console.error('Invalid region data:', region);
+      return notFound();
     }
 
-    filters = await getStoreFilters()
-    console.log('Filters Response:', filters);
+    try {
+      filters = await getStoreFilters();
+      console.log('Filters Response:', filters);
 
-    if (!filters || filters.length === 0) {
-      console.warn('No filters available.');
+      if (!filters || filters.length === 0) {
+        console.warn('No filters available.');
+        filters = []; // Provide a fallback to avoid breaking the UI.
+      }
+    } catch (error) {
+      console.error('Error fetching filters:', error);
+      filters = []; // Fallback to an empty array.
     }
 
     const searchRes = await search({
       currency_code: region.currency_code,
-      order: searchParams.sortBy,
-      page: pageNumber,
-      collection: searchParams.collection?.split(','),
-      type: searchParams.type?.split(','),
-      material: searchParams.material?.split(','),
-      price: searchParams.price?.split(','),
+      order: searchParams.sortBy || 'relevance', // Default to 'relevance'
+      page: pageNumber || 1, // Default to page 1
+      collection: searchParams.collection?.split(',') || [], // Default to empty array
+      type: searchParams.type?.split(',') || [], // Default to empty array
+      material: searchParams.material?.split(',') || [], // Default to empty array
+      price: searchParams.price?.split(',') || [], // Default to empty array
     })
 
     console.log('Search Response:', searchRes);
@@ -124,7 +132,7 @@ export default async function StoreTemplate({
         </Suspense>
       </Container>
 
-      {recommendedProducts.length > 0 && (
+      {recommendedProducts.length > 0 ? (
         <Suspense fallback={<SkeletonProductsCarousel />}>
           <ProductCarousel
             products={recommendedProducts}
@@ -132,6 +140,10 @@ export default async function StoreTemplate({
             title="Recommended products"
           />
         </Suspense>
+      ) : (
+        <p className="py-10 text-center text-lg text-secondary">
+          No recommended products available at the moment.
+        </p>
       )}
     </>
   )
