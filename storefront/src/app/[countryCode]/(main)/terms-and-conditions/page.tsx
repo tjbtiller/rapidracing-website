@@ -18,8 +18,6 @@ export const metadata: Metadata = {
 
 export default async function TermsAndConditionsPage() {
   try {
-    console.log('📦 Fetching Terms & Conditions content...')
-
     const contentResponse = await getContentPage(
       'terms-and-condition',
       'terms-and-conditions'
@@ -27,10 +25,7 @@ export default async function TermsAndConditionsPage() {
 
     const pageContent = contentResponse?.data?.PageContent
 
-    if (!pageContent) {
-      console.error('❌ No PageContent found for Terms & Conditions')
-      return notFound()
-    }
+    if (!pageContent) return notFound()
 
     const mdxSource = await serializeMdx(pageContent)
 
@@ -39,8 +34,6 @@ export default async function TermsAndConditionsPage() {
         id: heading.id,
         label: heading.title,
       })) || []
-
-    console.log('✅ Terms & Conditions page loaded.')
 
     return (
       <Container className="min-h-screen max-w-full bg-secondary !p-0">
@@ -60,8 +53,7 @@ export default async function TermsAndConditionsPage() {
         </Container>
       </Container>
     )
-  } catch (error: any) {
-    console.error('❌ Unexpected error loading Terms & Conditions:', error.message || error)
+  } catch (error) {
     return notFound()
   }
 }
