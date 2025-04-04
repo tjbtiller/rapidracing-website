@@ -27,7 +27,6 @@ export default async function Home(props: {
   params: Promise<{ countryCode: string }>
 }) {
   const params = await props.params
-
   const countryCode = params?.countryCode || 'us'
 
   const [{ collections: collectionsList }, { products }] = await Promise.all([
@@ -45,22 +44,27 @@ export default async function Home(props: {
     return null
   }
 
-  // CMS data
-  const [
-    strapiCollections,
-    {
-      data: { HeroBanner },
-    },
-    {
-      data: { MidBanner },
-    },
-    { data: posts },
-  ] = await Promise.all([
-    getCollectionsData(),
-    getHeroBannerData(),
-    getMidBannerData(),
-    getExploreBlogData(),
-  ])
+  // CMS data with fallback
+  let strapiCollections = null
+  let HeroBanner = null
+  let MidBanner = null
+  let posts = []
+
+  try {
+    const [cmsCollections, hero, mid, blog] = await Promise.all([
+      getCollectionsData(),
+      getHeroBannerData(),
+      getMidBannerData(),
+      getExploreBlogData(),
+    ])
+
+    strapiCollections = cmsCollections
+    HeroBanner = hero?.data?.HeroBanner
+    MidBanner = mid?.data?.MidBanner
+    posts = blog?.data ?? []
+  } catch (err: any) {
+    console.error('⚠️ CMS fetch failed:', err?.message || err)
+  }
 
   return (
     <>
@@ -84,7 +88,7 @@ export default async function Home(props: {
         />
       </Suspense>
       {MidBanner && <Banner data={MidBanner} />}
-      {posts && posts.length > 0 && <ExploreBlog posts={posts} />}
+      {posts.length > 0 && <ExploreBlog posts={posts} />}
     </>
   )
 }
