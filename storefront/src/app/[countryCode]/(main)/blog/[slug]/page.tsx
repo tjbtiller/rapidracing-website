@@ -8,13 +8,17 @@ import BlogPostTemplate from '@modules/blog/templates/blogPostTemplate'
 export async function generateStaticParams() {
   const slugs = await getAllBlogSlugs()
 
-  if (!slugs) {
+  if (!slugs?.length) {
+    console.warn("⚠️ No blog slugs found — skipping blog route generation.")
     return []
   }
 
-  const countryCodes = await listRegions().then((regions: StoreRegion[]) =>
-    regions?.map((r) => r.countries?.map((c) => c.iso_2)).flat()
-  )
+  const countryCodes = await listRegions()
+    .then((regions: StoreRegion[]) => regions?.map((r) => r.countries?.map((c) => c.iso_2)).flat())
+    .catch((err) => {
+      console.error("❌ Failed to fetch country codes from Medusa:", err)
+      return ["us"] // fallback country
+    })
 
   return slugs.flatMap((slug) =>
     countryCodes.map((countryCode) => ({

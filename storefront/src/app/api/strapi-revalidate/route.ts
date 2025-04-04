@@ -25,3 +25,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Error revalidating' }, { status: 500 })
   }
 }
+
+export async function GET() {
+  return NextResponse.json({ status: 'ok' }, { status: 200 })
+}
