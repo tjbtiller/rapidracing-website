@@ -10,7 +10,7 @@ const Hero = () => {
             level="h1"
             className="text-3xl leading-10 text-ui-fg-base font-normal"
           >
-            Welcone to Rapid Racing!
+            Welcome to Rapid Racing – Your Ultimate Destination for High-Performance ECU Solutions!
           </Heading>
           <Heading
             level="h2"
@@ -24,7 +24,7 @@ const Hero = () => {
           target="_blank"
         >
           <h1 style={{ textDecoration: "underline" }}>
-            Visit the wiki
+            Visit the WiKi
           </h1>
         </a>
       </div>
