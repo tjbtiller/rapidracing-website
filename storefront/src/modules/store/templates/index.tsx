@@ -46,6 +46,11 @@ export default async function StoreTemplate({
     }
 
     filters = await getStoreFilters()
+    console.log('Filters Response:', filters);
+
+    if (!filters || filters.length === 0) {
+      console.warn('No filters available.');
+    }
 
     const searchRes = await search({
       currency_code: region.currency_code,
@@ -57,8 +62,14 @@ export default async function StoreTemplate({
       price: searchParams.price?.split(','),
     })
 
-    results = searchRes.results || []
-    count = searchRes.count || 0
+    console.log('Search Response:', searchRes);
+
+    results = searchRes?.results || [];
+    count = searchRes?.count || 0;
+
+    if (results.length === 0) {
+      console.warn('No products found for the given search parameters.');
+    }
 
     const productList = await getProductsList({
       pageParam: 0,
@@ -71,6 +82,10 @@ export default async function StoreTemplate({
     console.error('❌ Error in StoreTemplate:', error)
     return notFound()
   }
+
+  console.log('Search Params:', searchParams)
+  console.log('Filters:', filters)
+  console.log('Region:', region)
 
   return (
     <>
@@ -103,7 +118,7 @@ export default async function StoreTemplate({
             />
           ) : (
             <p className="py-10 text-center text-lg text-secondary">
-              No products.
+              No products found. Please adjust your filters.
             </p>
           )}
         </Suspense>
