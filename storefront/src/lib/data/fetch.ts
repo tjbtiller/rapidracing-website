@@ -18,7 +18,7 @@ export const fetchStrapiClient = async (
     `${process.env.NEXT_PUBLIC_STRAPI_URL}${endpoint}`,
     {
       headers: {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_STRAPI_READ_TOKEN}`,
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_STRAPI_TOKEN}`,
       },
       ...params,
     }
@@ -183,7 +183,7 @@ export const getBlogPostBySlug = async (
 
 export const getAllBlogSlugs = async (): Promise<string[]> => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/blogs?fields[0]=slug`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/blogs?fields[0]=Slug`, {
       headers: {
         Authorization: `Bearer ${process.env.NEXT_PUBLIC_STRAPI_TOKEN}`,
       },
