@@ -189,13 +189,11 @@ export const getAllBlogSlugs = async (): Promise<string[]> => {
       },
     })
 
-    if (!res.ok) {
-      console.warn("⚠️ Failed to fetch blog slugs:", res.status, await res.text())
-      return []
-    }
-
     const data = await res.json()
-    return data.data?.map((post: any) => post.attributes.slug) || []
+
+    console.log("🔍 getAllBlogSlugs raw response:", JSON.stringify(data, null, 2))
+
+    return data.data?.map((post: any) => post.attributes?.Slug) || []
   } catch (err) {
     console.error("❌ Error in getAllBlogSlugs:", err)
     return []
