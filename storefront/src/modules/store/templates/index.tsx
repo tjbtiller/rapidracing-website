@@ -56,9 +56,11 @@ export default async function StoreTemplate({
         filters = []; // Provide a fallback to avoid breaking the UI.
       }
     } catch (error) {
-      console.error('Error fetching filters:', error);
+      console.error('Error fetching filters:', error.message, error.stack);
       filters = []; // Fallback to an empty array.
     }
+
+    console.log('Search Params:', searchParams);
 
     const searchRes = await search({
       currency_code: region.currency_code,
@@ -68,7 +70,7 @@ export default async function StoreTemplate({
       type: searchParams.type?.split(',') || [], // Default to empty array
       material: searchParams.material?.split(',') || [], // Default to empty array
       price: searchParams.price?.split(',') || [], // Default to empty array
-    })
+    });
 
     console.log('Search Response:', searchRes);
 
@@ -77,15 +79,22 @@ export default async function StoreTemplate({
 
     if (results.length === 0) {
       console.warn('No products found for the given search parameters.');
+      console.log('Search Response:', searchRes);
     }
 
-    const productList = await getProductsList({
-      pageParam: 0,
-      queryParams: { limit: 9 },
-      countryCode,
-    })
+    try {
+      const productList = await getProductsList({
+        pageParam: 0,
+        queryParams: { limit: 9 },
+        countryCode,
+      });
 
-    recommendedProducts = productList?.response?.products || []
+      recommendedProducts = productList?.response?.products || [];
+      console.log('Recommended Products:', recommendedProducts);
+    } catch (error) {
+      console.error('Error fetching recommended products:', error.message, error.stack);
+      recommendedProducts = [];
+    }
   } catch (error) {
     console.error('❌ Error in StoreTemplate:', error)
     return notFound()

@@ -31,33 +31,95 @@ export default async function CollectionTemplate({
   const { sortBy, page, type, material, price } = searchParams
   const { countryCode, handle } = params
 
-  const region = await getRegion(countryCode)
-  if (!region) notFound()
+  let region = null
+  let currentCollection = null
+  let filters = []
+  let results = []
+  let count = 0
+  let recommendedProducts = []
 
-  const currentCollection = await getCollectionByHandle(handle).then(
-    (collection: StoreCollection) => collection
-  )
-  if (!currentCollection) notFound()
+  try {
+    // Fetch region
+    try {
+      region = await getRegion(countryCode)
+      if (!region) {
+        console.error('❌ Region not found for countryCode:', countryCode)
+        return notFound()
+      }
+    } catch (error) {
+      console.error('❌ Error fetching region:', error.message, error.stack)
+      return notFound()
+    }
 
-  const pageNumber = page ? parseInt(page) : 1
-  const filters = await getStoreFilters()
+    // Fetch collection
+    try {
+      currentCollection = await getCollectionByHandle(handle)
+      if (!currentCollection) {
+        console.error('❌ Collection not found for handle:', handle)
+        return notFound()
+      }
+    } catch (error) {
+      console.error('❌ Error fetching collection:', error.message, error.stack)
+      return notFound()
+    }
 
-  const { results, count } = await search({
-    currency_code: region.currency_code,
-    order: sortBy,
-    page: pageNumber,
-    collection: [currentCollection.id],
-    type: type?.split(','),
-    material: material?.split(','),
-    price: price?.split(','),
-  })
+    // Fetch filters
+    try {
+      filters = await getStoreFilters()
+      if (!filters || filters.length === 0) {
+        console.warn('⚠️ No filters available.')
+        filters = [] // Fallback to an empty array
+      }
+    } catch (error) {
+      console.error('❌ Error fetching filters:', error.message, error.stack)
+      filters = [] // Fallback to an empty array
+    }
 
-  // TODO: Add logic in future
-  const { products: recommendedProducts } = await getProductsList({
-    pageParam: 0,
-    queryParams: { limit: 9 },
-    countryCode: params.countryCode,
-  }).then(({ response }) => response)
+    // Fetch products
+    try {
+      const pageNumber = page ? parseInt(page) : 1
+      const searchRes = await search({
+        currency_code: region.currency_code,
+        order: sortBy || 'relevance',
+        page: pageNumber,
+        collection: [currentCollection.id],
+        type: type?.split(','),
+        material: material?.split(','),
+        price: price?.split(','),
+      })
+
+      results = searchRes?.results || []
+      count = searchRes?.count || 0
+
+      if (results.length === 0) {
+        console.warn('⚠️ No products found for the given search parameters.')
+      }
+    } catch (error) {
+      console.error('❌ Error fetching products:', error.message, error.stack)
+      results = [] // Fallback to an empty array
+      count = 0
+    }
+
+    // Fetch recommended products
+    try {
+      const productList = await getProductsList({
+        pageParam: 0,
+        queryParams: { limit: 9 },
+        countryCode,
+      })
+
+      recommendedProducts = productList?.response?.products || []
+      if (recommendedProducts.length === 0) {
+        console.warn('⚠️ No recommended products found.')
+      }
+    } catch (error) {
+      console.error('❌ Error fetching recommended products:', error.message, error.stack)
+      recommendedProducts = [] // Fallback to an empty array
+    }
+  } catch (error) {
+    console.error('❌ Unexpected error in CollectionTemplate:', error.message, error.stack)
+    return notFound()
+  }
 
   return (
     <>
@@ -88,7 +150,7 @@ export default async function CollectionTemplate({
           {results && results.length > 0 ? (
             <PaginatedProducts
               products={results}
-              page={pageNumber}
+              page={page ? parseInt(page) : 1}
               total={count}
               countryCode={countryCode}
             />
@@ -99,7 +161,7 @@ export default async function CollectionTemplate({
           )}
         </Suspense>
       </Container>
-      {recommendedProducts && (
+      {recommendedProducts.length > 0 && (
         <Suspense fallback={<SkeletonProductsCarousel />}>
           <ProductCarousel
             products={recommendedProducts}
