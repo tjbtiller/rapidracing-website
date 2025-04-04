@@ -85,7 +85,7 @@ const Collections = ({
     try {
       if (!cmsCollections?.data?.length || !medusaCollections?.length) {
         console.warn('⚠️ No collections available from CMS or Medusa.')
-        return null
+        return []
       }
 
       const collections = cmsCollections.data.filter((cmsCollection) =>
@@ -94,31 +94,38 @@ const Collections = ({
         )
       )
 
-      if (!collections || collections.length < 3) {
-        console.warn('⚠️ Not enough valid collections to display.')
-        return null
+      if (!collections || collections.length === 0) {
+        console.warn('⚠️ No valid collections found after filtering.')
+        return []
       }
 
       return collections.sort((a, b) => b.id - a.id)
     } catch (error) {
       console.error('❌ Error processing valid collections:', error.message, error.stack)
-      return null
+      return []
     }
   }, [cmsCollections, medusaCollections])
 
   const newestCollections = useMemo(() => {
     try {
-      if (!validCollections) return null
+      if (!validCollections || validCollections.length === 0) {
+        console.warn('⚠️ No valid collections to process for newest collections.')
+        return []
+      }
       return validCollections.slice(0, 3)
     } catch (error) {
       console.error('❌ Error processing newest collections:', error.message, error.stack)
-      return null
+      return []
     }
   }, [validCollections])
 
-  if (!newestCollections) {
+  if (!newestCollections || newestCollections.length === 0) {
     console.warn('⚠️ No newest collections to display.')
-    return null
+    return (
+      <Container className="text-center py-10">
+        <p className="text-lg text-secondary">No collections available at the moment.</p>
+      </Container>
+    )
   }
 
   return (
