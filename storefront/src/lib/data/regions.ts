@@ -32,6 +32,7 @@ export const getRegion = cache(async function (countryCode: string) {
 
     regions.forEach((region) => {
       region.countries?.forEach((c) => {
+        console.log(`📍 Mapping country: ${c?.iso_2} to region ${region.name}`)
         regionMap.set(c?.iso_2 ?? '', region)
       })
     })
