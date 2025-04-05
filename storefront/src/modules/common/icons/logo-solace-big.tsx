@@ -7,6 +7,7 @@ export const RapidRacingLogoBig = () => {
       alt="Rapid Racing Logo"
       width={4096} // Adjust width as needed
       height={1212} // Adjust height as needed
+      unoptimized
     />
   )
 }
