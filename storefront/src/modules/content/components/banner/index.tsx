@@ -23,7 +23,7 @@ export const Banner = ({ data }: { data: StrapiPhotoAttributes[] }) => {
           className="h-auto w-full dark:invert"
         />
       ) : (
-        <RapidRacingLogoBig className="h-auto w-full" />
+        <img src="/RapidRacing.png" alt="Rapid Racing Logo" />
       )}
     </Container>
   )
